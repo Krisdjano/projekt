@@ -1,0 +1,81 @@
+import pygame
+import random
+import time
+
+# Initsialiseeri Pygame
+pygame.init()
+
+# Ekraani suurus ja seaded
+screen_width, screen_height = 800, 600
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Mäluarendaja mäng lastele")
+
+# Värvid
+white = (255, 255, 255)
+black = (0, 0, 0)
+blue = (0, 0, 255)
+red = (255, 0, 0)
+
+# Font
+font = pygame.font.Font(None, 48)
+
+# Kaardid ja nende asukohad
+cards = list(range(1, 9)) * 2
+random.shuffle(cards)
+revealed = [False] * 16
+first_card = None
+second_card = None
+found_pairs = 0
+
+# Joonistab kaardid ekraanile
+def draw_cards():
+    screen.fill(white)
+    for i, card in enumerate(cards):
+        x = (i % 4) * 200 + 10
+        y = (i // 4) * 150 + 10
+        rect = pygame.Rect(x, y, 180, 130)
+        if revealed[i]:
+            pygame.draw.rect(screen, blue, rect)
+            text = font.render(str(card), True, white)
+            screen.blit(text, (x + 65, y + 40))
+        else:
+            pygame.draw.rect(screen, black, rect, 5)
+    pygame.display.flip()
+
+# Kontrollib, kas kõik paarid on leitud
+def all_pairs_found():
+    return found_pairs == len(cards) // 2
+
+# Mängu tsükkel
+running = True
+while running:
+    draw_cards()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = event.pos
+            card_index = (x // 200) + (y // 150) * 4
+            if not revealed[card_index]:
+                if first_card is None:
+                    first_card = card_index
+                elif second_card is None:
+                    second_card = card_index
+                    if cards[first_card] == cards[second_card]:
+                        revealed[first_card] = True
+                        revealed[second_card] = True
+                        found_pairs += 1
+                    else:
+                        pygame.time.wait(1000)
+                    first_card = None
+                    second_card = None
+    if all_pairs_found():
+        screen.fill(white)
+        text = font.render("Palju õnne! Olete kõik paarid leidnud!", True, red)
+        screen.blit(text, (50, screen_height // 2 - 24))
+        pygame.display.flip()
+        pygame.time.wait(3000)
+        running = False
+
+# Lõpeta Pygame
+pygame.quit()
